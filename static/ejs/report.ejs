@@ -22,12 +22,7 @@
     <!-- search feat changes -->
     <%- include('partials/scripts/reportSearch') %>
     <script>
-      const scanItems = <%- JSON.stringify(
-          {
-            ...items,
-            passed: {
-              rules: items.passed.rules.map(r => delete r.pagesAffected),
-              ...items.passed
+<div id="scanData" data-items="<%- encodeURIComponent(JSON.stringify(items)) %>"></div>
             },
           }
         ) %>

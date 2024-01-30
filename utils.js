@@ -185,8 +185,32 @@ export const zipResults = (zipName, resultsPath) => {
   if (os.platform() === 'win32') {
     try {
       execSync(
-        `Get-ChildItem -Path "${resultsPath}\\*.*" -Recurse | Compress-Archive -DestinationPath "${zipName}"`,
-        { shell: 'powershell.exe' },
+# Function to sanitize the input path
+function Sanitize-Path($path) {
+    # Replace any potentially dangerous characters with an underscore
+    $invalidChars = [System.IO.Path]::GetInvalidPathChars() + [System.IO.Path]::GetInvalidFileNameChars()
+    foreach ($char in $invalidChars) {
+        $path = $path.Replace($char, '_')
+    }
+    return $path
+}
+
+# Function to sanitize the input file name
+function Sanitize-FileName($fileName) {
+    # Replace any potentially dangerous characters with an underscore
+    $invalidChars = [System.IO.Path]::GetInvalidFileNameChars()
+    foreach ($char in $invalidChars) {
+        $fileName = $fileName.Replace($char, '_')
+    }
+    return $fileName
+}
+
+# Usage of the sanitized variables
+$resultsPath = Sanitize-Path -path $resultsPath
+$zipName = Sanitize-FileName -fileName $zipName
+
+# Now we can safely use the sanitized variables in the command
+Get-ChildItem -Path "${resultsPath}\*.*" -Recurse | Compress-Archive -DestinationPath "${zipName}"
       );
     } catch (err) {
       throw err;

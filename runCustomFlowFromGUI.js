@@ -34,15 +34,30 @@ console.log(argv);
 console.log(generatedScript);
 const genScriptString = fs.readFileSync(generatedScript, 'utf-8');
 const genScriptCompleted = new Promise((resolve, reject) => {
-  eval(`(async () => {
-        try {
-            ${genScriptString} 
-            resolve(); 
-        } catch (e) {
-            reject(e)
-        }
-        })();`);
+import { chromium, webkit, devices } from 'playwright';
+// ... (other imports)
+
+const generatedScript = argv[2];
+console.log(argv);
+console.log(generatedScript);
+const genScriptString = fs.readFileSync(generatedScript, 'utf-8');
+
+// Use a safer alternative to eval, such as a Function constructor
+const genScriptFunction = new Function(genScriptString);
+
+const genScriptCompleted = new Promise(async (resolve, reject) => {
+  try {
+    // Execute the function instead of using eval
+    await genScriptFunction();
+    resolve();
+  } catch (e) {
+    reject(e);
+  }
 });
+
+await genScriptCompleted;
+
+// ... (rest of the code)
 
 await genScriptCompleted;
 

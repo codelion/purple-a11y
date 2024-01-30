@@ -161,8 +161,7 @@ export const runPdfScan = async randomToken => {
     intermediateFolder,
   ];
 
-  const ls = spawnSync(veraPdfExe, veraPdfCmdArgs, { shell: true });
-  fs.writeFileSync(intermediateResultPath, ls.stdout, { encoding: 'utf-8' });
+const ls = spawnSync(veraPdfExe, veraPdfCmdArgs, { shell: false });
 };
 
 // transform results from veraPDF to desired format for report

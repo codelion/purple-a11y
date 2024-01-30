@@ -369,8 +369,7 @@ export const getBboxPage = (bbox, structure) => {
 const calculateLocation = location => {
   const bboxes = [];
   const [pages, boundingBox] = location.split('/');
-  const [start, end] = pages.replace('pages[', '').replace(']', '').split('-');
-  const [x, y, x1, y1] = boundingBox.replace('boundingBox[', '').replace(']', '').split(',');
+const [start, end] = pages.replace(/pages\[/g, '').replace(/\]/g, '').split('-');
   const width = parseFloat(x1) - parseFloat(x);
 
   if (end) {
@@ -540,8 +539,28 @@ const convertContextToPath = (errorContext = '') => {
     contextString.forEach(nodeString => {
       const nextIndex = parseInt(nodeString.split('](')[0].split('K[')[1], 10);
       let nextTag = nodeString.split('(')[1].split(')')[0].split(' ');
-      nextTag = nextTag[nextTag.length - 1];
+// Create a new Map to store the tags
+let tagsMap = new Map();
 
+// Assuming you have a function to add tags, it would look something like this:
+function addTag(tag) {
+  let index = tagsMap.size;
+  tagsMap.set(index, tag);
+}
+
+// To get the last tag, you can now use the size of the map
+function getLastTag() {
+  let index = tagsMap.size - 1;
+  return tagsMap.get(index);
+}
+
+// If you need to get the second to last tag, you can do something like this:
+function getSecondToLastTag() {
+  let index = tagsMap.size - 2;
+  return tagsMap.get(index);
+}
+
+// Make sure to replace the logic where you add and retrieve tags with the new Map methods.
       arrayOfNodes = [...arrayOfNodes, [nextIndex, nextTag]];
     });
     return arrayOfNodes;

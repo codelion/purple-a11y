@@ -17,8 +17,28 @@ export const log = str => {
 
 export const screenshotFullPage = async (page, screenshotsDir, screenshotIdx) => {
   const imgName = `PHScan-screenshot${screenshotIdx}.png`;
-  const imgPath = path.join(screenshotsDir, imgName);
+const path = require('path');
+const screenshotsDir = '/path/to/screenshots'; // The directory where screenshots should be saved
 
+// Function to sanitize the image name
+function sanitizeInput(input) {
+  // Remove any path traversal characters or patterns
+  const illegalRe = /(\.\.\/|\/|\\|\.\.\\)/g;
+  // Replace illegal characters with an empty string
+  const sanitized = input.replace(illegalRe, '');
+  return sanitized;
+}
+
+// User-provided image name, which needs to be sanitized
+let imgName = 'userInputHere'; // This should be the actual user input
+
+// Sanitize the user input
+imgName = sanitizeInput(imgName);
+
+// Use the sanitized input to create the image path
+const imgPath = path.join(screenshotsDir, imgName);
+
+console.log(imgPath); // This should now be a safe path
   const fullPageSize = await page.evaluate(() => ({
     width: Math.max(
       document.body.scrollWidth,

@@ -66,13 +66,20 @@
                         onerror="this.onerror = null; this.remove();"
                       >
                       <div class="display-url-container">
-                        <a href="<%= page.url %>" target="_blank"><%= page.pageTitle.length > 0 ? page.pageTitle : page.url %></a>
-                        <p><%= page.url %></p>
+<a href="<%= encodeForURL('/' + page.url) %>" target="_blank" rel="noopener noreferrer"><%= encodeForHTML(page.pageTitle.length > 0 ? page.pageTitle : page.url) %></a>
+<a href="<%= encodeForURL('/' + page.url) %>" target="_blank" rel="noopener noreferrer"><%= encodeForHTML(page.pageTitle.length > 0 ? page.pageTitle : page.url) %></a>
                       </div>
                     </div>
                 <% } else { %>
-                    <a href="<%= page.url %>" target="_blank"><%= page.pageTitle.length > 0 ? page.pageTitle : page.url %></a>
-                    <p><%= page.url %></p>
+<a href="<%=
+  // Ensure that the URL starts with a forward slash for relative URLs
+  // or is a validated absolute URL to prevent XSS attacks.
+  page.url.startsWith('/') || page.url.startsWith('http://') || page.url.startsWith('https://')
+    ? encodeURI(page.url) // Encode the URL to prevent XSS
+    : '/' // Default to the root if the URL is not valid
+%>" target="_blank" rel="noopener noreferrer">
+  <%= page.pageTitle.length > 0 ? encodeURI(page.pageTitle) : encodeURI(page.url) %>
+</a>
                 <% } %>
               </li>
               <% }) %>
@@ -83,8 +90,7 @@
             <ul class="unbulleted-list">
               <% pagesNotScanned.forEach((page, index) => { %>
               <li>
-                <a class="not-scanned-url" href="<%= page.url %>" target="_blank"><%= page.url %></a>
-              </li>
+<a class="not-scanned-url" href="<%= encodeURI('/' + page.url) %>" target="_blank" rel="noopener noreferrer"><%= escape(page.url) %></a>
               <% }) %>
             </ul>
           </div>

@@ -545,8 +545,40 @@ const waitForCaptcha = async (page, captchaLocator) => {
       codegenCmd = `${codegenCmd} ${extraCodegenOpts}`;
     }
 
-    const codegenResult = execSync(codegenCmd, { cwd: __dirname });
+const { execSync } = require('child_process');
 
+// Function to sanitize user input
+function sanitizeInput(input) {
+    // Implement necessary sanitization logic
+    // For example, you might allow only alphanumeric characters and some safe symbols
+    const safePattern = /^[a-zA-Z0-9\-_ ]*$/;
+    if (!safePattern.test(input)) {
+        throw new Error('Invalid input detected!');
+    }
+    return input;
+}
+
+// Example usage
+function generateCode(userInput) {
+    // Sanitize the user input
+    const sanitizedInput = sanitizeInput(userInput);
+
+    // Construct the command using the sanitized input
+    const codegenCmd = `your-codegen-tool ${sanitizedInput}`;
+
+    // Execute the command in a safe manner
+    try {
+        const codegenResult = execSync(codegenCmd, { cwd: __dirname });
+        // Process the result as needed
+        console.log('Code generation successful:', codegenResult.toString());
+    } catch (error) {
+        // Handle errors appropriately
+        console.error('Code generation failed:', error);
+    }
+}
+
+// Replace 'userSuppliedData' with the actual data provided by the user
+generateCode(userSuppliedData);
     if (codegenResult.toString()) {
       console.error(`Error running Codegen: ${codegenResult.toString()}`);
     }
@@ -803,8 +835,7 @@ const waitForCaptcha = async (page, captchaLocator) => {
         if (options) {
           // TODO: handle includeHidden for cases with display:none characters (e.g. react.dev searchbar)
           // falsy if there are no options
-          options = options.trim().replace('}', ', includeHidden: true }');
-          line = line.replace(`getByRole(${paramsStr})`, `getByRole(${firstParam}, ${options})`);
+options = options.trim().replace(/\}/g, ', includeHidden: true }');
         }
       }
 

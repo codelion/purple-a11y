@@ -114,8 +114,8 @@
                 <ul id="wcagLinksList">
                   <% Object.entries(wcagLinks).forEach(link => { %>
                   <li>
-                    <a href="<%= link[1] %>" target="_blank"><%= link[0] %></a>
-                  </li>
+<a href="<%= encodeURI(link[1].startsWith('/') ? link[1] : `/${link[1]}`) %>" target="_blank" rel="noopener noreferrer"><%= link[0] %></a>
+<a href="<%= encodeURI(link[1].startsWith('/') ? link[1] : `/${link[1]}`) %>" target="_blank" rel="noopener noreferrer"><%= link[0] %></a>
                   <% }) %>
                 </ul>
               </div>

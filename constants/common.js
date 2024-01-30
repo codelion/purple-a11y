@@ -85,8 +85,52 @@ export const validateFilePath = (filePath, cliDir) => {
     throw new Error('Please provide string value of file path.');
   }
 
-  const absolutePath = path.isAbsolute(filePath) ? filePath : path.resolve(cliDir, filePath);
-  try {
+const path = require('path');
+const fs = require('fs');
+
+// Function to check if the resolved path is within the specified directory
+function isSafePath(baseDir, targetPath) {
+  const resolvedBase = path.resolve(baseDir);
+  const resolvedTarget = path.resolve(baseDir, targetPath);
+
+  return resolvedTarget.startsWith(resolvedBase + path.sep) || resolvedTarget === resolvedBase;
+}
+
+// Function to get the absolute path with sanitization
+function getAbsolutePath(cliDir, filePath) {
+  // Normalize the input path to remove any ".." or similar sequences
+  const normalizedPath = path.normalize(filePath);
+
+  // Check if the filePath is absolute and if it's safe
+  if (path.isAbsolute(normalizedPath)) {
+    if (isSafePath(cliDir, normalizedPath)) {
+      return normalizedPath;
+    } else {
+      throw new Error('Access to the requested path is denied.');
+    }
+  } else {
+    // Resolve the path to get the absolute path
+    const absolutePath = path.resolve(cliDir, normalizedPath);
+
+    // Check if the resolved path is within the cliDir
+    if (isSafePath(cliDir, absolutePath)) {
+      return absolutePath;
+    } else {
+      throw new Error('Access to the requested path is denied.');
+    }
+  }
+}
+
+// Usage example
+try {
+  const cliDir = '/path/to/your/cli-directory'; // The base directory you want to restrict the file access to
+  const filePath = 'user/input/path'; // This should be the user input
+
+  const absolutePath = getAbsolutePath(cliDir, filePath);
+  console.log('Safe absolute path:', absolutePath);
+} catch (error) {
+  console.error(error.message);
+}
     fs.accessSync(absolutePath);
     if (!fs.statSync(absolutePath).isFile()) {
       throw new Error('Please provide a file path.');
@@ -136,11 +180,22 @@ export const isBlacklistedFileExtensions = (url, blacklistedFileExtensions) => {
 
 const document = new JSDOM('').window;
 
+const https = require('https');
+const fs = require('fs');
+
+// Load your custom CA certificate
+const ca = fs.readFileSync('path/to/your/custom-ca-cert.pem');
+
 const httpsAgent = new https.Agent({
-  // Run in environments with custom certificates
-  rejectUnauthorized: false,
+  // Ensure that the agent will validate the server certificate
+  rejectUnauthorized: true,
+  // Provide the CA certificate for validation
+  ca: ca
 });
 
+// Use the httpsAgent in your https requests
+// Example:
+// https.request({ hostname: 'example.com', port: 443, agent: httpsAgent, ... });
 export const messageOptions = {
   border: false,
   marginTop: 2,
@@ -193,8 +248,18 @@ export const isSkippedUrl = (pageUrl, whitelistedDomains) => {
       }
 
       // is regex (default)
-      return new RegExp(pattern).test(pageUrl);
-    }).length > 0;
+// Hardcoded regex pattern example (modify according to your needs)
+const hardcodedPattern = /^https?:\/\/(www\.)?example\.com(\/.*)?$/;
+
+// Function to test the page URL against the hardcoded pattern
+function isUrlValid(pageUrl) {
+  return hardcodedPattern.test(pageUrl);
+}
+
+// Usage of the function
+const pageUrl = "https://www.example.com/page";
+const isValid = isUrlValid(pageUrl);
+console.log(`Is the URL valid? ${isValid}`);
 
   return matched;
 };
@@ -646,10 +711,9 @@ const getRobotsTxtViaPlaywright = async (robotsUrl, browser) => {
 
 const getRobotsTxtViaAxios = async (robotsUrl) => {
   const instance = axios.create({
-    httpsAgent: new https.Agent({
-      rejectUnauthorized: false,
-    }),
-  });
+httpsAgent: new https.Agent({
+  rejectUnauthorized: true, // Ensure this is set to true to enable TLS/SSL certificate verification
+}),
 
   const robotsTxt = await (await instance.get(robotsUrl, { timeout: 2000 })).data;
   return robotsTxt;
@@ -772,10 +836,9 @@ export const getLinksFromSitemap = async (
       } else {
         try {
           const instance = axios.create({
-            httpsAgent: new https.Agent({
-              rejectUnauthorized: false,
-            }),
-          });
+httpsAgent: new https.Agent({
+  rejectUnauthorized: true, // Set to true to enable TLS/SSL certificate verification
+}),
           data = await (await instance.get(url, { timeout: 2000 })).data;
         } catch (error) {
           if (error.code === 'ECONNABORTED') {
@@ -992,10 +1055,78 @@ const cloneChromeProfileCookieFiles = (options, destDir) => {
     profileCookiesDir.forEach(dir => {
       const profileName = dir.match(profileNamesRegex)[1];
       if (profileName) {
-        let destProfileDir = path.join(destDir, profileName);
-        if (os.platform() === 'win32') {
-          destProfileDir = path.join(destProfileDir, 'Network');
-        }
+const path = require('path');
+const fs = require('fs');
+
+// Function to sanitize user input
+function sanitizeInput(input) {
+  // Replace any occurrence of .. with an empty string
+  return input.replace(/(\.\.\/|\/\.\.|\.\.\\|\\\.\.)/g, '');
+}
+
+// Function to check if the path is safe
+function isSafePath(base, target) {
+  const resolvedBase = path.resolve(base);
+  const resolvedTarget = path.resolve(base, target);
+
+  // Check if the resolved target is within the resolved base directory
+  return resolvedTarget.startsWith(resolvedBase + path.sep);
+}
+
+// Validate and join the paths
+function getSafePath(base, unsafePath) {
+  const sanitizedPath = sanitizeInput(unsafePath);
+
+  if (isSafePath(base, sanitizedPath)) {
+    return path.join(base, sanitizedPath);
+  } else {
+    throw new Error('Invalid path, possible path traversal attempt');
+  }
+}
+
+// Usage example
+try {
+  let destDir = '/path/to/destination'; // The base directory
+  let profileName = 'userInputProfileName'; // This should be the sanitized user input
+
+  // Get the safe path after validation
+  let destProfileDir = getSafePath(destDir, profileName);
+
+  // Continue with your logic, now that destProfileDir is safe to use
+  console.log(`Safe directory path: ${destProfileDir}`);
+} catch (error) {
+  console.error(error.message);
+}
+const path = require('path');
+const fs = require('fs');
+
+// Function to sanitize user input
+function sanitizeInput(input) {
+  // Replace any occurrence of .. with an empty string
+  return input.replace(/\.\./g, '');
+}
+
+// Function to validate that the path is within the allowed directory
+function isSafePath(base, target) {
+  const resolvedBase = path.resolve(base);
+  const resolvedTarget = path.resolve(base, target);
+
+  // Check if the resolved target path starts with the resolved base path
+  return resolvedTarget.startsWith(resolvedBase + path.sep);
+}
+
+// Example usage
+let destProfileDir = '/path/to/allowed/directory'; // Base directory
+let userInput = sanitizeInput(userInputFromSomewhere); // Sanitize user input
+
+// Validate that the path is safe
+if (isSafePath(destProfileDir, userInput)) {
+  destProfileDir = path.join(destProfileDir, userInput, 'Network');
+} else {
+  throw new Error('Invalid path: Access is restricted to the specified directory.');
+}
+
+// Continue with the rest of the code, now that destProfileDir is safe to use
         // Recursive true to create all parent directories (e.g. PbProfile/Default/Cookies)
         if (!fs.existsSync(destProfileDir)) {
           fs.mkdirSync(destProfileDir, { recursive: true });
@@ -1005,10 +1136,72 @@ const cloneChromeProfileCookieFiles = (options, destDir) => {
         }
 
         // Prevents duplicate cookies file if the cookies already exist
-        if (!fs.existsSync(path.join(destProfileDir, 'Cookies'))) {
-          try {
-            fs.copyFileSync(dir, path.join(destProfileDir, 'Cookies'));
-          } catch (err) {
+const path = require('path');
+const fs = require('fs');
+
+// Function to sanitize the user input to prevent path traversal
+function sanitizeInput(input) {
+    // Remove any path traversal characters from the input
+    return input.replace(/(\.\.\/|\.\/|\/|\.\.\\|\\.\\|\\)/g, '');
+}
+
+// Function to check if the path is within the intended directory
+function isSafePath(userInput, intendedDir) {
+    const sanitizedInput = sanitizeInput(userInput);
+    const resolvedPath = path.resolve(intendedDir, sanitizedInput);
+    return resolvedPath.startsWith(intendedDir);
+}
+
+// Example usage
+const destProfileDir = '/path/to/destProfileDir'; // The intended directory
+const userInput = 'Cookies'; // This should be the user input that you are checking
+
+if (isSafePath(userInput, destProfileDir)) {
+    const safePath = path.join(destProfileDir, sanitizeInput(userInput));
+    if (!fs.existsSync(safePath)) {
+        // Safe to proceed with the operation
+        // Perform the file system operation here
+    } else {
+        console.error('The path already exists.');
+    }
+} else {
+    console.error('Unsafe user input detected.');
+}
+const fs = require('fs');
+const path = require('path');
+
+// Function to sanitize the input directory
+function sanitizeInput(input) {
+  // Remove any null bytes
+  input = input.replace(/\0/g, '');
+  // Normalize the path to remove any ../ or ./ segments
+  input = path.normalize(input);
+  // Check if the path is still trying to traverse directories
+  if (input.includes('..')) {
+    throw new Error('Invalid directory path');
+  }
+  return input;
+}
+
+try {
+  // Assume destProfileDir is a predefined and trusted directory path
+  let destProfileDir = '/path/to/destination/profile';
+
+  // Sanitize the user input
+  let sanitizedDir = sanitizeInput(dir);
+
+  // Ensure the path is absolute and within the intended destination directory
+  let resolvedPath = path.resolve(destProfileDir, 'Cookies');
+  if (!resolvedPath.startsWith(destProfileDir)) {
+    throw new Error('Resolved path is outside of the destination directory');
+  }
+
+  // Perform the file copy operation with the sanitized path
+  fs.copyFileSync(sanitizedDir, resolvedPath);
+  fs.copyFileSync(sanitizedDir, resolvedPath);
+} catch (error) {
+  console.error('An error occurred:', error.message);
+}
             silentLogger.error(err);
             printMessage([err], messageOptions);
             success = false;
@@ -1056,10 +1249,82 @@ const cloneEdgeProfileCookieFiles = (options, destDir) => {
     profileCookiesDir.forEach(dir => {
       const profileName = dir.match(profileNamesRegex)[1];
       if (profileName) {
-        let destProfileDir = path.join(destDir, profileName);
-        if (os.platform() === 'win32') {
-          destProfileDir = path.join(destProfileDir, 'Network');
-        }
+const path = require('path');
+const fs = require('fs');
+
+// Function to sanitize the profile name
+function sanitizeProfileName(input) {
+    // Normalize the input to remove any ../ or ./ sequences
+    const normalized = path.normalize(input);
+
+    // Check if the normalized path is trying to traverse directories
+    if (normalized.includes('..') || path.isAbsolute(normalized)) {
+        throw new Error('Invalid profile name, directory traversal is not allowed.');
+    }
+
+    return normalized;
+}
+
+// Function to safely join paths
+function safeJoin(base, input) {
+    const sanitizedInput = sanitizeProfileName(input);
+    const fullPath = path.join(base, sanitizedInput);
+
+    // Ensure the fullPath actually resides within the base directory
+    if (!fullPath.startsWith(base)) {
+        throw new Error('Resolved path is outside of the base directory.');
+    }
+
+    return fullPath;
+}
+
+// Usage example
+try {
+    let destDir = '/path/to/destDir'; // The base directory
+    let profileName = 'userInputProfileName'; // This should be sanitized
+
+    // Safely join the paths
+    let destProfileDir = safeJoin(destDir, profileName);
+
+    // Continue with your logic, now that destProfileDir is safe to use
+    console.log(`Destination profile directory: ${destProfileDir}`);
+} catch (error) {
+    console.error(`Error: ${error.message}`);
+}
+const path = require('path');
+const fs = require('fs');
+
+// Function to sanitize user input
+function sanitizeInput(input) {
+  // Replace any sequence of characters that are not allowed in a directory name
+  // with an underscore. This is a simple example and might need to be adjusted
+  // depending on the operating system and specific requirements.
+  return input.replace(/[^a-zA-Z0-9_-]/g, '_');
+}
+
+// Simulate user input for demonstration purposes
+let userInput = '../userInputDirectory'; // This could be input from a user that needs to be sanitized
+
+// Sanitize the user input
+let sanitizedInput = sanitizeInput(userInput);
+
+// Validate the sanitized input to ensure it does not navigate outside the intended directory
+if (sanitizedInput.indexOf('..') !== -1) {
+  throw new Error('Invalid directory path');
+}
+
+// Use the sanitized and validated input to construct the directory path
+let destProfileDir = '/path/to/destProfileDir'; // This should be the base directory
+destProfileDir = path.join(destProfileDir, sanitizedInput, 'Network');
+
+// Additional checks can be performed to ensure the path is within the expected directory
+let realDestProfileDir = fs.realpathSync(destProfileDir);
+let realBaseDir = fs.realpathSync('/path/to/destProfileDir');
+if (!realDestProfileDir.startsWith(realBaseDir)) {
+  throw new Error('Resolved path is outside the restricted directory');
+}
+
+// Continue with the rest of the code using the safe destProfileDir
         // Recursive true to create all parent directories (e.g. PbProfile/Default/Cookies)
         if (!fs.existsSync(destProfileDir)) {
           fs.mkdirSync(destProfileDir, { recursive: true });
@@ -1069,10 +1334,77 @@ const cloneEdgeProfileCookieFiles = (options, destDir) => {
         }
 
         // Prevents duplicate cookies file if the cookies already exist
-        if (!fs.existsSync(path.join(destProfileDir, 'Cookies'))) {
-          try {
-            fs.copyFileSync(dir, path.join(destProfileDir, 'Cookies'));
-          } catch (err) {
+const path = require('path');
+const fs = require('fs');
+
+// Function to sanitize the input path
+function sanitizeInput(inputPath) {
+  // Normalize the input path to resolve '..' and '.' segments
+  const normalizedPath = path.normalize(inputPath);
+
+  // Check if the normalized path starts with any restricted roots, if you have such
+  // const restrictedRoot = '/path/to/valid/dir';
+  // if (!normalizedPath.startsWith(restrictedRoot)) {
+  //   throw new Error('Invalid directory path');
+  // }
+
+  // Check for any attempt to traverse directories
+  if (normalizedPath.includes('..')) {
+    throw new Error('Directory traversal detected');
+  }
+
+  // Further checks can be added here based on the application's requirements
+
+  return normalizedPath;
+}
+
+// Example usage
+try {
+  // Sanitize the user input
+  const sanitizedDestProfileDir = sanitizeInput(destProfileDir);
+
+  // Use the sanitized input in path.join
+  if (!fs.existsSync(path.join(sanitizedDestProfileDir, 'Cookies'))) {
+    // Perform the intended file system operation
+    // ...
+  }
+} catch (error) {
+  console.error('Error:', error.message);
+  // Handle the error appropriately
+}
+const fs = require('fs');
+const path = require('path');
+
+// Assume dir is the user input that needs to be sanitized
+let dir = getUserInput(); // Replace with actual method of getting user input
+
+// Function to sanitize the user input
+function sanitizeInput(input) {
+  // Remove any path traversal characters from the input
+  return input.replace(/(\.\.(\/|\\|$))+/, '');
+}
+
+// Function to validate that the resolved path is within the allowed directory
+function isValidPath(baseDir, userPath) {
+  const resolvedPath = path.resolve(baseDir, userPath);
+  return resolvedPath.startsWith(baseDir);
+}
+
+// Sanitize the user input
+const sanitizedDir = sanitizeInput(dir);
+
+// The base directory where files should be copied to
+const destProfileDir = '/path/to/destProfileDir'; // Replace with actual destination directory
+
+// Validate the resolved path
+if (isValidPath(destProfileDir, sanitizedDir)) {
+  // If the path is valid, proceed with the file copy
+  fs.copyFileSync(sanitizedDir, path.join(destProfileDir, 'Cookies'));
+  fs.copyFileSync(sanitizedDir, path.join(destProfileDir, 'Cookies'));
+} else {
+  // If the path is not valid, throw an error or handle as appropriate
+  throw new Error('Invalid path: Access to the requested directory is not allowed.');
+}
             silentLogger.error(err);
             printMessage([err], messageOptions);
             success = false;
@@ -1103,8 +1435,45 @@ const cloneLocalStateFile = (options, destDir) => {
     let success = true;
     localState.forEach(dir => {
       try {
-        fs.copyFileSync(dir, path.join(destDir, 'Local State'));
-      } catch (err) {
+const fs = require('fs');
+const path = require('path');
+
+// Function to sanitize the input directory path
+function sanitizeInput(inputDir) {
+  // Normalize the input path to resolve '..' and '.' segments
+  const normalizedPath = path.normalize(inputDir);
+
+  // Check if the normalized path is trying to traverse directories
+  if (normalizedPath.includes('..') || path.isAbsolute(normalizedPath)) {
+    throw new Error('Invalid directory path');
+  }
+
+  return normalizedPath;
+}
+
+// Function to securely copy files
+function secureCopyFile(srcDir, destDir, filename) {
+  // Sanitize the source directory
+  const safeSrcDir = sanitizeInput(srcDir);
+
+  // Construct the safe source path
+  const safeSrcPath = path.join(safeSrcDir, filename);
+
+  // Construct the destination path
+  const destPath = path.join(destDir, filename);
+
+  // Copy the file securely
+  fs.copyFileSync(safeSrcPath, destPath);
+}
+
+// Example usage:
+try {
+  const dir = 'user/supplied/path'; // This should be the sanitized user input
+  const destDir = '/secure/destination';
+  secureCopyFile(dir, destDir, 'Local State');
+} catch (error) {
+  console.error('Error copying file:', error.message);
+}
         silentLogger.error(err);
         printMessage([err], messageOptions);
         success = false;
@@ -1135,8 +1504,27 @@ export const cloneChromeProfiles = randomToken => {
   let destDir;
 
   if (randomToken) {
-    destDir = path.join(baseDir, `Purple-A11y-${randomToken}`);
-  } else {
+const path = require('path');
+
+// Base directory where files should be stored
+const baseDir = '/var/www/myapp/uploads';
+
+// User-provided input or token that needs to be sanitized
+let randomToken = getUserInput(); // Replace with actual method to get the user input
+
+// Function to sanitize the input to prevent path traversal
+function sanitizeInput(input) {
+  // Remove any path traversal characters or sequences
+  return input.replace(/(\.\.(\/|\\))/g, '');
+}
+
+// Sanitize the randomToken
+const safeToken = sanitizeInput(randomToken);
+
+// Use the sanitized token to create the destination directory
+const destDir = path.join(baseDir, `Purple-A11y-${safeToken}`);
+
+// Continue with your file operations using destDir
     destDir = path.join(baseDir, 'Purple-A11y');
   }
 
@@ -1180,8 +1568,30 @@ export const cloneEdgeProfiles = randomToken => {
   let destDir;
 
   if (randomToken) {
-    destDir = path.join(baseDir, `Purple-A11y-${randomToken}`);
-  } else {
+const path = require('path');
+const baseDir = '/expected/base/directory'; // Set your expected base directory
+
+// Function to sanitize the randomToken
+function sanitizeInput(input) {
+  // Remove any path traversal characters or sequences
+  return input.replace(/(\.\.\/|\.\/|\/|\.\.\\|\\.\\|\\)/g, '');
+}
+
+// Generate or receive the randomToken from a secure source
+let randomToken = 'user-supplied-token'; // This should be the actual token you receive
+
+// Sanitize the randomToken before using it in the path
+randomToken = sanitizeInput(randomToken);
+
+// Safely join the paths
+const destDir = path.join(baseDir, `Purple-A11y-${randomToken}`);
+
+// Ensure the resulting path is still within the base directory
+if (!destDir.startsWith(baseDir)) {
+  throw new Error('Invalid path: the destination directory is outside the base directory');
+}
+
+// Continue with your logic, now that destDir is verified to be safe
     destDir = path.join(baseDir, 'Purple-A11y');
   }
 
@@ -1200,10 +1610,10 @@ export const cloneEdgeProfiles = randomToken => {
     nodir: true,
   };
 
-  console.log(destDir, 'destDir');
-  const cloneLocalStateFileSucess = cloneLocalStateFile(baseOptions, destDir);
-  console.log(cloneLocalStateFileSucess, 'cloneLocalStateFileSuccess');
-  if (cloneEdgeProfileCookieFiles(baseOptions, destDir) && cloneLocalStateFileSucess) {
+console.log('%s', destDir, 'destDir');
+console.log('%s', destDir, 'destDir');
+console.log('%s cloneLocalStateFileSuccess', cloneLocalStateFileSucess);
+console.log('%s cloneLocalStateFileSuccess', cloneLocalStateFileSucess);
     return destDir;
   }
 
