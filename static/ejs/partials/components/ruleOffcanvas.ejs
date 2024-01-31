@@ -33,8 +33,8 @@
         const encodedVersionNumber = encodeURIComponent(phAppVersion);
         const aiFeedbackForm = `https://form.gov.sg/64d4a74da3a1e10012fd16a3/?${urlScannedField}=${encodedUrlScanned}&${versionNumberField}=${encodedVersionNumber}`;
       %>
-      <a target="_blank" href="<%=aiFeedbackForm%>">Let us know if it helps!</a>
-    </div>
+<a target="_blank" href="/<%= encodeURIComponent(aiFeedbackForm) %>">Let us know if it helps!</a>
+<a target="_blank" href="/<%= encodeURIComponent(aiFeedbackForm) %>">Let us know if it helps!</a>
   </div>
   <div class="offcanvas-body">
     <!-- search feat changes -->

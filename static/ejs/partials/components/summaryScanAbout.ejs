@@ -34,8 +34,8 @@
         fill="#CED4DA"
       />
     </svg>
-    <a aria-label="URL scanned" href="<%= urlScanned %>" target="_blank"><%= urlScanned %></a>
-  </li>
+<a aria-label="URL scanned" href="<% if(urlScanned.startsWith('/')) { %>/<%= urlScanned %><% } else { %>javascript:void(0);<% } %>" target="_blank" rel="noopener noreferrer"><%= urlScanned %></a>
+<a aria-label="URL scanned" href="<% if(urlScanned.startsWith('/')) { %>/<%= urlScanned %><% } else { %>javascript:void(0);<% } %>" target="_blank" rel="noopener noreferrer"><%= urlScanned %></a>
   <% if (viewport !== null) { %>
   <li class="svg-container">
     <% if (viewport.startsWith('Desktop')) { %>

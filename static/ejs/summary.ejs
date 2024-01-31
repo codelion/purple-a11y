@@ -23,12 +23,8 @@
     <%- include('partials/scripts/ruleOffcanvas') %>
     <%- include('partials/scripts/summaryScanResults') %>  
     <script>
-      const scanItems = <%- JSON.stringify(
-        {
-          ...items, 
-          passed: {
-            rules: items.passed.rules.map(r => delete r.pagesAffected), 
-            ...items.passed
+<!-- Place your data in a 'data' attribute within a hidden HTML element -->
+<div id="scanItemsData" style="display: none;" data-items="<%- encodeURIComponent(JSON.stringify(items)) %>"></div>
           }, 
         }
       ) %>

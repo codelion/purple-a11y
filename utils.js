@@ -185,8 +185,50 @@ export const zipResults = (zipName, resultsPath) => {
   if (os.platform() === 'win32') {
     try {
       execSync(
-        `Get-ChildItem -Path "${resultsPath}\\*.*" -Recurse | Compress-Archive -DestinationPath "${zipName}"`,
-        { shell: 'powershell.exe' },
+# Function to sanitize the input path
+function Sanitize-Path($path) {
+    # Remove any potentially malicious characters from the path
+    $invalidChars = [System.IO.Path]::GetInvalidPathChars() + [System.IO.Path]::GetInvalidFileNameChars()
+    $regex = "[" + [Regex]::Escape([String]::Join('', $invalidChars)) + "]"
+    $sanitizedPath = $path -replace $regex, ''
+    
+    # Ensure the path is a valid, absolute path to prevent directory traversal attacks
+    if (-Not [System.IO.Path]::IsPathRooted($sanitizedPath)) {
+        throw "Invalid path: The path must be absolute."
+    }
+
+    # Optionally, check if the path exists and is a directory
+    if (-Not (Test-Path -Path $sanitizedPath -PathType Container)) {
+        throw "Invalid path: The path does not exist or is not a directory."
+    }
+
+    return $sanitizedPath
+}
+
+# Function to sanitize the zip name
+function Sanitize-ZipName($name) {
+    # Remove any potentially malicious characters from the zip name
+    $invalidChars = [System.IO.Path]::GetInvalidFileNameChars()
+    $regex = "[" + [Regex]::Escape([String]::Join('', $invalidChars)) + "]"
+    $sanitizedName = $name -replace $regex, ''
+
+    # Ensure the zip name ends with .zip
+    if (-Not $sanitizedName.EndsWith(".zip")) {
+        $sanitizedName += ".zip"
+    }
+
+    return $sanitizedName
+}
+
+# Usage of the sanitized variables
+try {
+    $sanitizedResultsPath = Sanitize-Path -path $resultsPath
+    $sanitizedZipName = Sanitize-ZipName -name $zipName
+
+    Get-ChildItem -Path "${sanitizedResultsPath}\\*.*" -Recurse | Compress-Archive -DestinationPath "${sanitizedZipName}"
+} catch {
+    Write-Error "An error occurred: $_"
+}
       );
     } catch (err) {
       throw err;

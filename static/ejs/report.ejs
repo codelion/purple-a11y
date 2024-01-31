@@ -22,12 +22,29 @@
     <!-- search feat changes -->
     <%- include('partials/scripts/reportSearch') %>
     <script>
-      const scanItems = <%- JSON.stringify(
-          {
-            ...items,
-            passed: {
-              rules: items.passed.rules.map(r => delete r.pagesAffected),
-              ...items.passed
+<!-- Place the JSON data inside a script tag with type "application/json" -->
+<script id="scanItemsData" type="application/json">
+<%- JSON.stringify({
+  ...items,
+  passed: {
+    rules: items.passed.rules.map(r => {
+      delete r.pagesAffected;
+      return r;
+    })
+  }
+}) %>
+</script>
+
+<script>
+// Use JavaScript to retrieve and parse the JSON data
+document.addEventListener('DOMContentLoaded', function() {
+  var scanItemsDataElement = document.getElementById('scanItemsData');
+  var scanItems = JSON.parse(scanItemsDataElement.textContent);
+
+  // Now you can safely use the scanItems object in your JavaScript code
+  console.log(scanItems);
+});
+</script>
             },
           }
         ) %>

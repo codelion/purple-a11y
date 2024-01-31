@@ -66,13 +66,13 @@
                         onerror="this.onerror = null; this.remove();"
                       >
                       <div class="display-url-container">
-                        <a href="<%= page.url %>" target="_blank"><%= page.pageTitle.length > 0 ? page.pageTitle : page.url %></a>
-                        <p><%= page.url %></p>
+<a href="<%= encodeURI(page.url.startsWith('/') ? page.url : '/' + page.url) %>" target="_blank" rel="noopener noreferrer"><%= page.pageTitle.length > 0 ? page.pageTitle : encodeURI(page.url) %></a>
+<a href="<%= encodeURI(page.url.startsWith('/') ? page.url : '/' + page.url) %>" target="_blank" rel="noopener noreferrer"><%= page.pageTitle.length > 0 ? page.pageTitle : encodeURI(page.url) %></a>
                       </div>
                     </div>
                 <% } else { %>
-                    <a href="<%= page.url %>" target="_blank"><%= page.pageTitle.length > 0 ? page.pageTitle : page.url %></a>
-                    <p><%= page.url %></p>
+<a href="<%= encodeForHTMLAttribute(page.url.startsWith('/') ? page.url : '/' + page.url) %>" target="_blank"><%= encodeForHTML(page.pageTitle.length > 0 ? page.pageTitle : page.url) %></a>
+<a href="<%= encodeForHTMLAttribute(page.url.startsWith('/') ? page.url : '/' + page.url) %>" target="_blank"><%= encodeForHTML(page.pageTitle.length > 0 ? page.pageTitle : page.url) %></a>
                 <% } %>
               </li>
               <% }) %>
@@ -83,8 +83,8 @@
             <ul class="unbulleted-list">
               <% pagesNotScanned.forEach((page, index) => { %>
               <li>
-                <a class="not-scanned-url" href="<%= page.url %>" target="_blank"><%= page.url %></a>
-              </li>
+<a class="not-scanned-url" href="/<%= encodeURIComponent(page.url) %>" target="_blank" rel="noopener noreferrer"><%= page.url %></a>
+<a class="not-scanned-url" href="/<%= encodeURIComponent(page.url) %>" target="_blank" rel="noopener noreferrer"><%= page.url %></a>
               <% }) %>
             </ul>
           </div>

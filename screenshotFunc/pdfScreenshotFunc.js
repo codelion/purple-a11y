@@ -369,8 +369,27 @@ export const getBboxPage = (bbox, structure) => {
 const calculateLocation = location => {
   const bboxes = [];
   const [pages, boundingBox] = location.split('/');
-  const [start, end] = pages.replace('pages[', '').replace(']', '').split('-');
-  const [x, y, x1, y1] = boundingBox.replace('boundingBox[', '').replace(']', '').split(',');
+// Assuming 'pages' is a string in the format 'pages[start-end]'
+// First, validate the 'pages' format to ensure it's as expected
+const pagesRegex = /^pages\[\d+-\d+\]$/;
+if (!pagesRegex.test(pages)) {
+  throw new Error('Invalid pages format');
+}
+
+// Use a regular expression with the global flag to replace all occurrences of '[' and ']'
+const sanitizedPages = pages.replace(/\[|\]/g, '');
+
+// Split the sanitized string to get the start and end values
+const [start, end] = sanitizedPages.split('-');
+
+// Ensure that start and end are valid integers
+const startInt = parseInt(start, 10);
+const endInt = parseInt(end, 10);
+if (isNaN(startInt) || isNaN(endInt)) {
+  throw new Error('Start or end is not a valid number');
+}
+
+// Now 'startInt' and 'endInt' are properly sanitized and can be safely used
   const width = parseFloat(x1) - parseFloat(x);
 
   if (end) {

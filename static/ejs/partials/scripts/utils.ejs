@@ -6,8 +6,7 @@
     return tempContainer.firstChild;
   }
 
-  const purpleAiHtmlETL = <%- purpleAi.htmlETL %>;
-  const purpleAiRules = <%- JSON.stringify(purpleAi.rules) %>;
+const purpleAiHtmlETL = <%= purpleAi.htmlETL %>;
 
   // extract tagname and attribute name from html tag
   // e.g. ["input", "type", "value", "role"] from <input type="text" value="..." role="..." />
