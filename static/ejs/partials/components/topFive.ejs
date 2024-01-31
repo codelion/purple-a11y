@@ -1,3 +1,4 @@
+<a href="<%= encodeURI('/' + page.url) %>" target="_blank" rel="noopener noreferrer"><%= page.pageTitle.length > 0 ? page.pageTitle : encodeURI(page.url) %></a>
 <div id="top-five-card" class="card h-100">
   <div class="card-body">
     <h2>Top 5 affected pages with the most issues</h2>
@@ -5,11 +6,11 @@
       <% topFiveMostIssues.forEach((page, index) => { %>
         <% if (page.totalIssues !== 0) { %> 
           <li class="d-flex justify-content-between">
-            <a href="<%= page.url %>" target="_blank"><%= page.pageTitle.length > 0 ? page.pageTitle : page.url %></a>
+            <a href="<%= encodeURI('/' + page.url) %>" target="_blank" rel="noopener noreferrer"><%= page.pageTitle.length > 0 ? page.pageTitle : encodeURI(page.url) %></a>
             <span aria-label="<%= page.totalIssues %> issues" class="fw-bold ms-2"><%= page.totalIssues %></span>
           </li>
         <% } %>
       <% }) %>
-  </ul>
+    </ul>
   </div>
 </div>

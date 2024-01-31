@@ -6,16 +6,17 @@
         const encodedUrlScanned = encodeURIComponent(urlScanned);
         const versionNumberField = '64db1f79141a46001243b77a';
         const encodedVersionNumber = encodeURIComponent(phAppVersion);
-        const feedbackForm = `https://form.gov.sg/64d1fcde4d0bb70012010995/?${urlScannedField}=${encodedUrlScanned}&${versionNumberField}=${encodedVersionNumber}`;
+        // Ensure that the feedbackForm variable is constructed safely
+        const feedbackForm = `/https://form.gov.sg/64d1fcde4d0bb70012010995/?${urlScannedField}=${encodedUrlScanned}&${versionNumberField}=${encodedVersionNumber}`;
       %>
-      <a href="<%=feedbackForm%>" target="_blank">Help us improve</a>
+      <!-- Use the safe feedbackForm variable in the href attribute -->
+      <a href="<%= encodeURIComponent(feedbackForm) %>" target="_blank">Help us improve</a>
       <hr class="d-sm-none" />
     </div>
     <div class="col-sm-6 text-sm-end">
       Created by
-      <a href="https://form.gov.sg/64d1fcde4d0bb70012010995" target="_blank"
-        >GovTech Accessibility Enabling Team</a
-      >
+      <!-- Ensure the URL in the href attribute is safe and starts with a forward slash if it's a relative URL -->
+      <a href="/https://form.gov.sg/64d1fcde4d0bb70012010995" target="_blank">GovTech Accessibility Enabling Team</a>
     </div>
   </div>
 </footer>

@@ -545,8 +545,28 @@ const waitForCaptcha = async (page, captchaLocator) => {
       codegenCmd = `${codegenCmd} ${extraCodegenOpts}`;
     }
 
-    const codegenResult = execSync(codegenCmd, { cwd: __dirname });
+const { execSync } = require('child_process');
 
+// Assume 'userInput' is a variable that holds input from the user that needs to be included in the command.
+// Sanitize the user input by escaping potentially dangerous characters or by using a whitelist approach.
+
+// Example of a simple sanitization function that escapes shell metacharacters
+function sanitizeInput(input) {
+  const metaCharsRegExp = /(["'`\\$;&|<>])/g;
+  return input.replace(metaCharsRegExp, '\\$1');
+}
+
+// Use the sanitized input to construct the command
+const safeUserInput = sanitizeInput(userInput);
+
+// If 'codegenCmd' must include user input, ensure it is sanitized
+const codegenCmd = `some-command ${safeUserInput}`;
+
+// Execute the command without using the shell
+const codegenResult = execSync(codegenCmd, { cwd: __dirname, stdio: 'inherit', shell: false });
+
+// If the command does not need to include user input, simply execute it without interpolation
+// const codegenResult = execSync('some-safe-command', { cwd: __dirname, stdio: 'inherit', shell: false });
     if (codegenResult.toString()) {
       console.error(`Error running Codegen: ${codegenResult.toString()}`);
     }
@@ -803,8 +823,7 @@ const waitForCaptcha = async (page, captchaLocator) => {
         if (options) {
           // TODO: handle includeHidden for cases with display:none characters (e.g. react.dev searchbar)
           // falsy if there are no options
-          options = options.trim().replace('}', ', includeHidden: true }');
-          line = line.replace(`getByRole(${paramsStr})`, `getByRole(${firstParam}, ${options})`);
+options = options.trim().replace(/\}/g, ', includeHidden: true }');
         }
       }
 

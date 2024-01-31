@@ -17,8 +17,28 @@ export const log = str => {
 
 export const screenshotFullPage = async (page, screenshotsDir, screenshotIdx) => {
   const imgName = `PHScan-screenshot${screenshotIdx}.png`;
-  const imgPath = path.join(screenshotsDir, imgName);
+const path = require('path');
+const fs = require('fs');
 
+// The directory where screenshots should be saved
+const screenshotsDir = '/path/to/screenshots';
+
+// Function to sanitize the image name
+function sanitizeImgName(imgName) {
+  // Remove any path traversal characters or sequences
+  return path.basename(imgName);
+}
+
+// User-provided image name (this should be sanitized)
+let imgName = 'userInput.jpg'; // Replace with actual user input
+
+// Sanitize the user input to prevent path traversal
+imgName = sanitizeImgName(imgName);
+
+// Join the sanitized image name with the screenshots directory
+const imgPath = path.join(screenshotsDir, imgName);
+
+// Now you can safely use imgPath knowing it's restricted to the screenshotsDir
   const fullPageSize = await page.evaluate(() => ({
     width: Math.max(
       document.body.scrollWidth,
